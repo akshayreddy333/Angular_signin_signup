@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormControl, Validators, FormGroup, FormBuilder } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Http } from '@angular/http';
 
 @Component({
   selector: 'app-login',
@@ -8,29 +9,34 @@ import { Router } from '@angular/router';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  model: any = {};
+  loading = false;
+  public userData;
+  public detailsMismatch = false;
 
-  constructor(private fb: FormBuilder, private router: Router) { }
-  user: { username: string, pwd: string }
-  LoginForm: FormGroup;
+  constructor(
+    private router: Router,
+    private http: Http) { }
 
   ngOnInit() {
-    this.LoginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      pwd: ['', [Validators.required]]
-    })
+    // localStorage.removeItem('userData');
   }
-  get username() { return this.LoginForm.get('username'); }
 
-  get pwd() { return this.LoginForm.get('pwd'); }
-  public onFormSubmit() {
-    if (this.LoginForm.valid) {
-      this.user = this.LoginForm.value;
-      console.log(this.user.username);
-
-      if ((this.user.username) == ('akshay') && (this.user.pwd) == ('akshay')) {
-        console.log('Login Successful')
-        this.router.navigate(['/console']);
+  login() {
+    this.loading = true;
+    this.detailsMismatch = false;
+    this.http.get('assets/apis/users.json').subscribe(res => {
+      this.userData = res.json();
+      if (this.userData.username == this.model.username && this.userData.password == this.model.password) {
+        console.log('Login Details matched')
+        localStorage.setItem('localuserData', JSON.stringify(this.userData));
+        // const localuserData = JSON.parse(localStorage.getItem('localuserData'));
+        // console.log(localuserData)
+      } else {
+        this.detailsMismatch = true;
       }
-    }
+      this.loading = false;
+      //   this.router.navigate(['/']);
+    })
   }
 }
